@@ -1,0 +1,8 @@
+*.zip
+.*
+__pycache__/
+!.gitignore
+cheo_videos
+dataset_DECA_cheo
+data/face_seg_fcn8s_300.caffemodel
+data/face_seg_fcn8s_300_deploy.prototxt
