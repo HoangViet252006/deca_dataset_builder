@@ -10,7 +10,7 @@ from tqdm import tqdm
 
 
 class FaceSegmentation:
-    def __init__(self, model_prototxt='data/face_seg_fcn8s_300_deploy.prototxt', model_weights='data/face_seg_fcn8s_300.caffemodel', image_size=(300, 300),
+    def __init__(self, model_prototxt='data/face_seg_fcn8s_300_deploy.prototxt', model_weights='data/face_seg_fcn8s_300.caffemodel', image_size=(224, 224),
                  mean_bgr=np.array([104.00698793, 116.66876762, 122.67891434]),
                  use_gpu=False, gpu_id=0):
         """

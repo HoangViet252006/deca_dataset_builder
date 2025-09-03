@@ -3,7 +3,7 @@ import shutil
 from collections import defaultdict
 from glob import glob
 import cv2
-
+import random
 
 def reorganize_dataset(root_folder):
     """
@@ -108,5 +108,49 @@ def remove_small_subfolders(dataset_path, min_files=4):
                     shutil.rmtree(subfolder_path)
 
 
+def split_dataset(src_root, dst_root, train_ratio=0.9, seed=42):
+    random.seed(seed)
+
+    # make train and val dirs
+    train_root = os.path.join(dst_root, "train")
+    val_root = os.path.join(dst_root, "val")
+    os.makedirs(train_root, exist_ok=True)
+    os.makedirs(val_root, exist_ok=True)
+
+    # iterate over each top-level sequence
+    for seq_name in os.listdir(src_root):
+        seq_path = os.path.join(src_root, seq_name)
+        if not os.path.isdir(seq_path):
+            continue
+
+        # all subfolders (frames)
+        frame_folders = [f for f in os.listdir(seq_path)
+                         if os.path.isdir(os.path.join(seq_path, f))]
+
+        # shuffle and split
+        random.shuffle(frame_folders)
+        split_idx = int(len(frame_folders) * train_ratio)
+        train_folders = frame_folders[:split_idx]
+        val_folders = frame_folders[split_idx:]
+
+        # copy train
+        for f in train_folders:
+            src = os.path.join(seq_path, f)
+            dst = os.path.join(train_root, seq_name, f)
+            shutil.copytree(src, dst)
+
+        # copy val
+        for f in val_folders:
+            src = os.path.join(seq_path, f)
+            dst = os.path.join(val_root, seq_name, f)
+            shutil.copytree(src, dst)
+
+        print(f"Processed {seq_name}: {len(train_folders)} train, {len(val_folders)} val")
+
+
+
+
 if __name__ == "__main__":
-    remove_small_subfolders("dataset_DECA_cheo")
+    src_root = "dataset_DECA_cheo"  # original dataset
+    dst_root = "dataset_DECA_cheo_split"  # same root, will create train/ and val/ inside
+    split_dataset(src_root, dst_root)
