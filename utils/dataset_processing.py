@@ -39,14 +39,18 @@ def reorganize_dataset(root_folder):
             print(f"Moved {len(files)} files into {prefix_folder}")
 
 
+import os
+import cv2
+from glob import glob
+
 def video_folder_to_frames(video_folder, output_root, sample_step=10,
                            extensions=(".mp4", ".vid", ".ebm", ".mpg"),
-                           start_minute=1, duration_minute=3):
+                           start_minute=None, duration_minute=None):
     """
     Extract frames from videos in a folder.
     Each video gets its own subfolder. Frames are sampled every `sample_step` frames.
 
-    Returns a dictionary mapping video paths to lists of saved frame paths.
+    If `start_minute` and `duration_minute` are None, extract the entire video.
     """
     os.makedirs(output_root, exist_ok=True)
 
@@ -66,8 +70,13 @@ def video_folder_to_frames(video_folder, output_root, sample_step=10,
         fps = cap.get(cv2.CAP_PROP_FPS)
         total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
 
-        start_frame = int(start_minute * 60 * fps)
-        end_frame = min(int((start_minute + duration_minute) * 60 * fps), total_frames)
+        # If start/duration are provided, restrict range; otherwise use full video
+        if start_minute is not None and duration_minute is not None:
+            start_frame = int(start_minute * 60 * fps)
+            end_frame = min(int((start_minute + duration_minute) * 60 * fps), total_frames)
+        else:
+            start_frame = 0
+            end_frame = total_frames
 
         frame_list = []
 
@@ -87,6 +96,7 @@ def video_folder_to_frames(video_folder, output_root, sample_step=10,
         all_frames[video_path] = frame_list
 
     return all_frames
+
 
 
 def remove_small_subfolders(dataset_path, min_files=4):
@@ -148,9 +158,49 @@ def split_dataset(src_root, dst_root, train_ratio=0.9, seed=42):
         print(f"Processed {seq_name}: {len(train_folders)} train, {len(val_folders)} val")
 
 
+def is_blurry(image_path, threshold=100):
+    """
+    Return True if the image is blurry.
+    threshold: smaller value = stricter check, larger value = looser check
+    """
+    image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
+    if image is None:
+        return True  # treat unreadable images as "blurry"
+    laplacian_var = cv2.Laplacian(image, cv2.CV_64F).var()
+    # if laplacian_var < threshold:
+    #     print(f"Removed blurry image: {image_path} with laplacian_var: {laplacian_var}")
+
+    return laplacian_var < threshold
+
+
+def remove_blurry_cropped_images(root_dir, threshold=20):
+    """
+    Traverse the entire dataset and delete images ending with *_cropped.png if they are blurry.
+    """
+    removed_files = []
+    total = 0
+    removed = 0
+    for subdir, _, files in os.walk(root_dir):
+        for filename in files:
+            if filename.endswith("_cropped.png"):
+                total += 1
+                file_path = os.path.join(subdir, filename)
+                if is_blurry(file_path, threshold=threshold):
+                    removed += 1
+                    os.remove(file_path)
+                    removed_files.append(file_path)
+
+    # print(f"Percentage of blurry images: {removed / total * 100:.2f}%")
+    return removed_files
 
 
 if __name__ == "__main__":
-    src_root = "dataset_DECA_cheo"  # original dataset
-    dst_root = "dataset_DECA_cheo_split"  # same root, will create train/ and val/ inside
-    split_dataset(src_root, dst_root)
+    video_folder_to_frames("cheo_videos", "dataset_DECA_cheo", sample_step=12)
+    #
+    # remove_blurry_cropped_images("dataset_DECA_cheo")
+    #
+    # remove_small_subfolders("dataset_DECA_cheo")
+    #
+    # src_root = "dataset_DECA_cheo"  # original dataset
+    # dst_root = "dataset_DECA_cheo_split"  # same root, will create train/ and val/ inside
+    # split_dataset(src_root, dst_root)

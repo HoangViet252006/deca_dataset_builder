@@ -83,20 +83,21 @@ if __name__ == "__main__":
     fan_model = FAN.FAN()
     face_seg_model = face_seg.FaceSegmentation()
 
+    process_folder("dataset_DECA_cheo")
     # if os.path.isdir(args.input_path):
     #     process_folder(args.input_path, fan_model, face_seg_model)
     # else:
     #     process_image(args.input_path, fan_model, face_seg_model)
 
     # Example visualization
-    image_path = "data/images/Trich doan 1. Mau No Phu ong_frame001500.jpg"
-    prefix, _ = os.path.splitext(image_path)
-    cropped_path = f"{prefix}_cropped.png"
-    mask_path = f"{prefix}_cropped_mask.npy"
-    lmk_path = f"{prefix}_lmk.npy"
-
-    save_mask_vis(img_path=cropped_path, mask_path=mask_path,
-                  save_path=f"{prefix}_mask_vis.png")
-
-    save_landmark_vis(img_path=cropped_path, lmk_path=lmk_path,
-                      save_path=f"{prefix}_lmk_vis.png")
+    # image_path = "data/images/Trich doan 1. Mau No Phu ong_frame001500.jpg"
+    # prefix, _ = os.path.splitext(image_path)
+    # cropped_path = f"{prefix}_cropped.png"
+    # mask_path = f"{prefix}_cropped_mask.npy"
+    # lmk_path = f"{prefix}_lmk.npy"
+    #
+    # save_mask_vis(img_path=cropped_path, mask_path=mask_path,
+    #               save_path=f"{prefix}_mask_vis.png")
+    #
+    # save_landmark_vis(img_path=cropped_path, lmk_path=lmk_path,
+    #                   save_path=f"{prefix}_lmk_vis.png")
